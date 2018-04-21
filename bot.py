@@ -11,7 +11,6 @@ import requests
 from bs4 import BeautifulSoup
 import bs4, requests
 message_with_inline_keyboard = None
-
 def on_chat_message(msg):
     content_type, chat_type, chat_id = telepot.glance(msg)
     print('Chat:', content_type, chat_type, chat_id)
@@ -24,17 +23,47 @@ def on_chat_message(msg):
 # KeyboardButton(text="🔧 Settings 🔧")]
 # ]
 # , resize_keyboard=True))
-    if command == '/start':
+
+    if command == '/start' :
+
         markup = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text='🗓️ current weather 🗓️'), KeyboardButton(text='📅 weekly weather 📅',)],
         [KeyboardButton(text='🔧 settings 🔧')],
         ])
-        bot.sendMessage(chat_id, '*Welcome!*', reply_markup=markup, parse_mode='Markdown')
+        bot.sendMessage(chat_id, '*HI!*', reply_markup=markup, parse_mode='Markdown')
+    elif command != '/start' or '🗓️ current weather 🗓️' or '📅 weekly weather 📅' or '🔧 settings 🔧' or '📌 last location 📌' or '🌐 languages 🌐' or '📝 units 📝' or '🔙 back 🔙' or '⏰ alerts ⏰' or 'celsium(°C)' or 'fahrenheit(°F)' or '❌ cancel ❌' or '🏴󠁧󠁢󠁥󠁮󠁧󠁿 english 🏴󠁧󠁢󠁥󠁮󠁧󠁿' or '🇺🇦 українська 🇺🇦' or '🇩🇪 deutsch 🇩🇪' or '🇷🇺 русский 🇷🇺':
+        def search_meteo(text):
+            response = requests.post('http://meteo.ua/ua/search-forecast-by-city-name', data={'name': text})
+            b = bs4.BeautifulSoup(response.text, "html.parser")
+            p3 = b.select('.main_cont p a')
+            hrefs = p3[0]['href']
+            print(hrefs)
+            return hrefs
+
+        hrefs = search_meteo(text=text)
+        s = requests.get('http://meteo.ua{}'.format(hrefs))
+        b = bs4.BeautifulSoup(s.text, "html.parser")
+        p3 = b.select('.wi_now')
+        tempnow = p3[0].getText()
+        print(tempnow)
+
+        p3 = b.select('.wiw_power')
+        windnow = p3[0].getText()
+        print(windnow)
+
+        p3 = b.select('.wi_right')
+        day = p3[0].getText()
+        print(day)
+
+        p3 = b.select('.wwt_tmps')
+        minmaxdoba = p3[0].getText()
+        print(minmaxdoba)
+        bot.sendMessage(chat_id,'message')
     elif command == '🗓️ current weather 🗓️':
-        markup = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text='📌 last location 📌')],[ KeyboardButton(text='➕ new Location ➕')],
-        [KeyboardButton(text='🗺️ my location 🗺️', request_location=True)],[KeyboardButton(text='🔙 back 🔙')]
-        ])
+        # markup = ReplyKeyboardMarkup(keyboard=[
+        # [KeyboardButton(text='📌 last location 📌')],[ KeyboardButton(text='➕ new location ➕')],
+        # [KeyboardButton(text='🗺️ my location 🗺️', request_location=True)],[KeyboardButton(text='🔙 back 🔙')]
+        # ])
 
         # s = requests.get('http://meteo.ua/ua/44/lvov')
         # b = bs4.BeautifulSoup(s.text, "html.parser")
@@ -53,7 +82,7 @@ def on_chat_message(msg):
         # p3 = b.select('.wwt_tmps')
         # minmaxdoba = p3[0].getText()
         # print(minmaxdoba)
-        bot.sendMessage(chat_id, 'choose location', reply_markup=markup, parse_mode='Markdown')
+        bot.sendMessage(chat_id, 'Write your *location*', parse_mode='Markdown')
     elif command == '📌 last location 📌':
         markup = ReplyKeyboardMarkup(keyboard=[
             [KeyboardButton(text='🗓️ current weather 🗓️'), KeyboardButton(text='📅 weekly weather 📅', )],
@@ -66,11 +95,19 @@ def on_chat_message(msg):
         tempnow = p3[0].getText()
         print(tempnow)
 
-        p3 = b.select('.wiw_power')
-        windnow = p3[0].getText()
-        print(windnow)
-        bot.sendMessage(chat_id,tempnow, reply_markup=markup)
+        p4 = b.select('.wiw_power')
+        windnow = p4[0].getText()
+
+        weather_now = tempnow + 'Wind:' + windnow
+
+        bot.sendMessage(chat_id,weather_now, reply_markup=markup)
     elif command == '📅 weekly weather 📅':
+        markup = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text='📌 last location 📌')],[ KeyboardButton(text='➕ new Location ➕')],
+        [KeyboardButton(text='🗺️ my location 🗺️', request_location=True)],[KeyboardButton(text='🔙 back 🔙')]
+        ])
+        bot.sendMessage(chat_id, '*Choose location*', reply_markup=markup, parse_mode='Markdown')
+    elif command == '🗺️ my location 🗺️':
         markup = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text='📌 last location 📌')],[ KeyboardButton(text='➕ new Location ➕')],
         [KeyboardButton(text='🗺️ my location 🗺️', request_location=True)],[KeyboardButton(text='🔙 back 🔙')]
@@ -78,8 +115,8 @@ def on_chat_message(msg):
         bot.sendMessage(chat_id, '*Choose location*', reply_markup=markup, parse_mode='Markdown')
     elif command == '🔧 settings 🔧':
         markup = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text='🌐 languages 🌐'), KeyboardButton(text='units')],
-        [KeyboardButton(text='alerts'), KeyboardButton(text='🔙 back 🔙')]
+        [KeyboardButton(text='🌐 languages 🌐'), KeyboardButton(text='📝 units 📝')],
+        [KeyboardButton(text='⏰ alerts ⏰'), KeyboardButton(text='🔙 back 🔙')]
         ])
         bot.sendMessage(chat_id, '*Set up your bot*', reply_markup=markup, parse_mode='Markdown')
     elif command == '🔙 back 🔙':
@@ -88,7 +125,7 @@ def on_chat_message(msg):
         [KeyboardButton(text='🔧 settings 🔧')],
         ])
         bot.sendMessage(chat_id, '*you returned back*', reply_markup=markup, parse_mode='Markdown')
-    elif command == 'units':
+    elif command == '📝 units 📝':
         markup = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text='celsium(°C)'), KeyboardButton(text='fahrenheit(°F)', )],
         [KeyboardButton(text='❌ cancel ❌')],
@@ -96,8 +133,8 @@ def on_chat_message(msg):
         bot.sendMessage(chat_id, '*Choose Celsium or Fahrenheit*', reply_markup=markup, parse_mode='Markdown')
     elif command == '❌ cancel ❌':
         markup = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text='🌐 languages 🌐'), KeyboardButton(text='units')],
-        [KeyboardButton(text='alerts'), KeyboardButton(text='🔙 back 🔙')]
+        [KeyboardButton(text='🌐 languages 🌐'), KeyboardButton(text='📝 units 📝')],
+        [KeyboardButton(text='⏰ alerts ⏰'), KeyboardButton(text='🔙 back 🔙')]
         ])
         bot.sendMessage(chat_id, '*Set up your bot*', reply_markup=markup, parse_mode='Markdown')
     if command == 'celsium(°c)':
@@ -147,8 +184,8 @@ def on_chat_message(msg):
         bot.sendMessage(chat_id, '*Виберіть місцезнаходження*', reply_markup=markup, parse_mode='Markdown')
     elif command == '🔧 налаштування 🔧':
         markup = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text='🌐 мови 🌐'), KeyboardButton(text='одиниці')],
-        [KeyboardButton(text='сповіщення'), KeyboardButton(text='🔙 назад 🔙')]
+        [KeyboardButton(text='🌐 мови 🌐'), KeyboardButton(text='📝 одиниці 📝')],
+        [KeyboardButton(text='⏰ сповіщення ⏰'), KeyboardButton(text='🔙 назад 🔙')]
         ])
         bot.sendMessage(chat_id, '*Налаштуйте свого бота*', reply_markup=markup, parse_mode='Markdown')
     elif command == '🔙 назад 🔙':
@@ -157,7 +194,7 @@ def on_chat_message(msg):
         [KeyboardButton(text='🔧 налаштування 🔧')],
         ])
         bot.sendMessage(chat_id, '*Ви повернулися назад*', reply_markup=markup, parse_mode='Markdown')
-    elif command == 'одиниці':
+    elif command == '📝 одиниці 📝':
         markup = ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text='цельсії(°C)'), KeyboardButton(text='фаренгейти(°F)', )],
         [KeyboardButton(text='❌ відмінити ❌')],
@@ -165,8 +202,8 @@ def on_chat_message(msg):
         bot.sendMessage(chat_id, '*Виберіть одиниці виміру*', reply_markup=markup, parse_mode='Markdown')
     elif command == '❌ відмінити ❌':
         markup = ReplyKeyboardMarkup(keyboard=[
-        [KeyboardButton(text='🌐 мови 🌐'), KeyboardButton(text='одиниці')],
-        [KeyboardButton(text='сповіщення'), KeyboardButton(text='🔙 назад 🔙')]
+        [KeyboardButton(text='🌐 мови 🌐'), KeyboardButton(text='📝 одиниці 📝')],
+        [KeyboardButton(text='⏰ сповіщення ⏰'), KeyboardButton(text='🔙 назад 🔙')]
         ])
         bot.sendMessage(chat_id, '*налаштуйте свого бота*', reply_markup=markup, parse_mode='Markdown')
     if command == 'цельсії(°c)':
@@ -188,6 +225,8 @@ def on_chat_message(msg):
         ])
         bot.sendMessage(chat_id, '*Виберіть мову*', reply_markup=markup,
 parse_mode='Markdown')
+# TOKEN = '577877864:AAEh1MKE62KPntQjSuEtH53sDYJDes3oYyM' newskit token
+
 TOKEN = "597420522:AAHdU-Cy7B6U_wQ5UQBjLp1TsmlSeyr2aY8"
 bot = telepot.Bot(TOKEN)
 
